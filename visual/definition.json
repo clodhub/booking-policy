@@ -1,0 +1,68 @@
+{
+  "id": "com.clodhub.booking-policy",
+  "name": "Booking policy",
+  "kind": "component",
+  "status": "example",
+  "package": "pkg:clod/com.clodhub/booking-policy",
+  "version": "0.1.0",
+  "ports": [
+    {
+      "id": "booking-policy",
+      "name": "Booking policy",
+      "direction": "output",
+      "kind": "interface",
+      "type": "com.clodhub/booking-policy",
+      "version": "1.0.0"
+    }
+  ],
+  "settings": [
+    {
+      "id": "depositPercent",
+      "name": "Depositpercent",
+      "type": "number",
+      "required": false,
+      "secret": false,
+      "default": 50
+    },
+    {
+      "id": "freeCancellationHours",
+      "name": "Freecancellationhours",
+      "type": "number",
+      "required": false,
+      "secret": false,
+      "default": 24
+    },
+    {
+      "id": "holdMinutes",
+      "name": "Holdminutes",
+      "type": "number",
+      "required": false,
+      "secret": false,
+      "default": 40
+    },
+    {
+      "id": "checkoutMinutes",
+      "name": "Checkoutminutes",
+      "type": "number",
+      "required": false,
+      "secret": false,
+      "default": 35
+    },
+    {
+      "id": "minimumMinutes",
+      "name": "Minimumminutes",
+      "type": "number",
+      "required": false,
+      "secret": false,
+      "default": 15
+    },
+    {
+      "id": "maximumMinutes",
+      "name": "Maximumminutes",
+      "type": "number",
+      "required": false,
+      "secret": false,
+      "default": 360
+    }
+  ]
+}

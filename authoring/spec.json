@@ -1,0 +1,325 @@
+{
+  "name": "booking-policy",
+  "version": "0.1.0",
+  "sourceRevision": "219d7dc979278f850fe0efd83c5e11eee26c3217",
+  "title": "Booking policy",
+  "description": "A shop's booking terms as pure functions: the deposit and the balance after a gift card, the free cancellation period and who gets a refund, when a late cancellation uses up a gift card, how long an unpaid booking holds its time, when a payment checkout expires, and the allowed booking lengths.",
+  "facilities": [
+    {
+      "id": "booking-policy",
+      "description": "Deposit and balance, free cancellation and refunds, gift card use on late cancellation, payment holds, checkout expiry and booking lengths"
+    }
+  ],
+  "provides": [
+    {
+      "id": "booking-policy",
+      "type": "com.clodhub/booking-policy",
+      "version": "1.0.0",
+      "path": "interfaces/booking-policy.json"
+    }
+  ],
+  "requires": [],
+  "collect": [
+    {
+      "id": "depositPercent",
+      "type": "integer",
+      "grammar": "integer",
+      "required": false,
+      "secret": false,
+      "default": 50
+    },
+    {
+      "id": "freeCancellationHours",
+      "type": "integer",
+      "grammar": "integer",
+      "required": false,
+      "secret": false,
+      "default": 24
+    },
+    {
+      "id": "holdMinutes",
+      "type": "integer",
+      "grammar": "integer",
+      "required": false,
+      "secret": false,
+      "default": 40
+    },
+    {
+      "id": "checkoutMinutes",
+      "type": "integer",
+      "grammar": "integer",
+      "required": false,
+      "secret": false,
+      "default": 35
+    },
+    {
+      "id": "minimumMinutes",
+      "type": "integer",
+      "grammar": "integer",
+      "required": false,
+      "secret": false,
+      "default": 15
+    },
+    {
+      "id": "maximumMinutes",
+      "type": "integer",
+      "grammar": "integer",
+      "required": false,
+      "secret": false,
+      "default": 360
+    }
+  ],
+  "dependencies": [],
+  "tools": {
+    "node": "26.5"
+  },
+  "suites": [
+    {
+      "id": "web",
+      "argv": [
+        "node",
+        "--test",
+        "tests/web.test.ts"
+      ]
+    }
+  ],
+  "templates": [
+    "implementation/web/settings.ts"
+  ],
+  "text": {
+    "purpose": "The rules a shop applies around a booking, kept apart from the booking flow so the booking page shows the same numbers the server charges. A booking pays a deposit online (`depositPercent` of the total, less any gift card) and the balance at the appointment. A customer who cancels more than `freeCancellationHours` before the start gets the deposit back; the owner's cancellation is always free; a late cancellation by the customer keeps the deposit and uses up a gift card. A booking waiting for payment holds its time and its gift card for `holdMinutes`, a payment checkout expires after `checkoutMinutes`, and a booking lasts from `minimumMinutes` to `maximumMinutes`.",
+    "userInputs": "`depositPercent` (0 takes no deposit and confirms at once, 100 takes the whole price online), `freeCancellationHours`, `holdMinutes` (at least `checkoutMinutes`), `checkoutMinutes` (31 to 1440: the payment provider accepts 30 minutes to 24 hours), `minimumMinutes` and `maximumMinutes` for the length of one booking. The defaults are the source shop's terms.",
+    "integration": "Pure functions on the web and the server (`web/index.ts`, `server/index.ts`). The booking page calls `depositAndBalance` to show what is paid now; the reservations component calls the same functions with the same settings when it creates the checkout (`checkoutExpiry`), counts the bookings that hold a gift card (`holdActive`), previews a cancellation (`refundEligible`, `freeCancellationDeadline`) and cancels (`refundEligible` for the deposit, `cardConsumedByCancellation` for the gift card). Amounts are integers in minor units.",
+    "infrastructure": "No service, account or stored data.",
+    "verification": "`tests/web.test.ts` checks the settings template and its limits, the deposit and balance against the source's own `giftCardAmounts` run on 18 cases, other percentages, the strict deadline (exactly the free period before the start is late), owner and customer cancellations with and without a deposit, a card-only booking keeping its card when cancelled early, the hold boundary, the checkout expiry in whole seconds with the provider's limits, durations, and the example. The class suite (`classes/booking-policy-class/check.mjs`) checks the same contract against any implementation.",
+    "scenarios": "Example Studio books a Relaxing Massage and a Deep Facial (15500) paid partly with a 6000 gift card: the customer pays a 1750 deposit online and 7750 at the studio. Cancelling two days ahead refunds the deposit and keeps the card; cancelling the evening before keeps the deposit and uses up the card. A shop that takes no deposits sets `depositPercent` to 0.",
+    "updates": "Patch updates replace the files only; the component keeps no data. Changing a setting changes the terms of new bookings only if the application stores what it charged."
+  },
+  "agentInstructions": "Select this component for the booking-policy slot of any shop that takes bookings. Set `depositPercent` and `freeCancellationHours` from the recipe's answers; leave `holdMinutes` and `checkoutMinutes` at their defaults unless the payment provider changes its checkout limits; set `minimumMinutes` and `maximumMinutes` to the shortest and longest booking the shop's catalogue allows. Connect the provided `booking-policy` to the reservations component.",
+  "developerInstructions": "Nothing to supply. Show the cancellation terms on the booking page from the same settings: the deadline is `freeCancellationDeadline(startsAt, settings.freeCancellationHours)`. Keep `holdMinutes` at least `checkoutMinutes` (the settings refuse less), so a checkout that is still open never loses its time or gift card.",
+  "suitability": {
+    "format": 1,
+    "jobs": [
+      "booking-policy"
+    ],
+    "profiles": [
+      {
+        "id": "any",
+        "load": {},
+        "cost": "none",
+        "regions": [
+          "any"
+        ],
+        "compliance": []
+      }
+    ],
+    "notes": "Pure functions. The checkout expiry limits (30 minutes to 24 hours) are Stripe's, from https://docs.stripe.com/api/checkout/sessions/create (expires_at)."
+  },
+  "infrastructure": {
+    "accounts": [],
+    "deployedReason": "No deployed service: functions in the application."
+  },
+  "modules": {
+    "web": "web/index.ts",
+    "server": "server/index.ts"
+  },
+  "toolchains": {
+    "server": [
+      {
+        "name": "node",
+        "versionRange": ">=26.5.0 <27.0.0",
+        "probe": [
+          "node",
+          "--version"
+        ],
+        "install": {
+          "macos": [
+            "brew",
+            "install",
+            "node"
+          ],
+          "windows": [
+            "winget",
+            "install",
+            "--exact",
+            "--id",
+            "OpenJS.NodeJS"
+          ],
+          "linux": null
+        },
+        "manual": "Without the package manager, install Node 26 from nodejs.org (the installer, or the zip or tar archive with its folder put first on PATH); on Linux also from the NodeSource repository."
+      }
+    ],
+    "web": [
+      {
+        "name": "node",
+        "versionRange": ">=26.5.0 <27.0.0",
+        "probe": [
+          "node",
+          "--version"
+        ],
+        "install": {
+          "macos": [
+            "brew",
+            "install",
+            "node"
+          ],
+          "windows": [
+            "winget",
+            "install",
+            "--exact",
+            "--id",
+            "OpenJS.NodeJS"
+          ],
+          "linux": null
+        },
+        "manual": "Without the package manager, install Node 26 from nodejs.org (the installer, or the zip or tar archive with its folder put first on PATH); on Linux also from the NodeSource repository."
+      }
+    ]
+  },
+  "upstream": [],
+  "compatibility": {
+    "runtimes": {
+      "node": ">=26.5.0 <27.0.0"
+    },
+    "frameworks": {},
+    "dependencies": [],
+    "styles": {
+      "scope": "none",
+      "namespaces": [],
+      "conflicts": []
+    }
+  },
+  "maintenance": {
+    "owners": [
+      "Level N Ltd"
+    ],
+    "contact": "https://github.com/clodhub/booking-policy/issues",
+    "repository": "https://github.com/clodhub/booking-policy",
+    "updates": {
+      "source": "https://github.com/clodhub/booking-policy/releases",
+      "strategy": "manual"
+    }
+  },
+  "classes": [
+    {
+      "reference": {
+        "name": "pkg:clod/com.clodhub/booking-policy-class",
+        "version": "1.0.0",
+        "digest": "20f35d706566e57a9ee6526ea07da5fe49b504789cea0bef0d9503cfcca2d10e"
+      },
+      "descriptor": {
+        "format": 3,
+        "name": "pkg:clod/com.clodhub/booking-policy-class",
+        "version": "1.0.0",
+        "title": "Booking policy",
+        "summary": "Booking terms as pure functions: deposit and balance after a gift card, free cancellation and refunds, gift card use on late cancellation, payment holds and checkout expiry, booking lengths",
+        "category": "scheduling/booking",
+        "presentation": "none",
+        "provides": [
+          {
+            "type": "com.clodhub/booking-policy",
+            "version": "1.0.0",
+            "path": "classes/booking-policy-class/booking-policy.json",
+            "modules": {
+              "web": [
+                "web/index.ts"
+              ],
+              "server": [
+                "server/index.ts"
+              ]
+            }
+          }
+        ],
+        "requires": [],
+        "settings": {
+          "type": "object",
+          "properties": {
+            "depositPercent": {
+              "type": "integer"
+            },
+            "freeCancellationHours": {
+              "type": "integer"
+            },
+            "holdMinutes": {
+              "type": "integer"
+            },
+            "checkoutMinutes": {
+              "type": "integer"
+            },
+            "minimumMinutes": {
+              "type": "integer"
+            },
+            "maximumMinutes": {
+              "type": "integer"
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        },
+        "inventory": [
+          {
+            "path": "classes/booking-policy-class/booking-policy.json",
+            "digest": "b6bc271e481a12d1a2330fbdf2afaf22f08234a449fcc68e3dc70beb02a95985"
+          },
+          {
+            "path": "classes/booking-policy-class/check.mjs",
+            "digest": "e2773193bbc8ffb7f918c0da0c599526717c633aec502d299603f6a5017a211a"
+          },
+          {
+            "path": "classes/booking-policy-class/runtime.mjs",
+            "digest": "1d85f0dae92d5c6c859cd48a4211a933718ae3e168554a2b00806183c4b661f0"
+          }
+        ],
+        "verification": [
+          {
+            "id": "shared",
+            "root": "package",
+            "argv": [
+              "node",
+              "classes/booking-policy-class/check.mjs"
+            ],
+            "cwd": ".",
+            "prepare": [],
+            "tools": {
+              "node": "26.5"
+            },
+            "fixtures": [
+              "classes/booking-policy-class/check.mjs"
+            ],
+            "locks": [],
+            "network": false,
+            "timeoutSeconds": 60,
+            "expectedExit": 0,
+            "scope": "required-local",
+            "requirements": []
+          }
+        ]
+      }
+    }
+  ],
+  "implements": [
+    {
+      "name": "pkg:clod/com.clodhub/booking-policy-class",
+      "version": "1.0.0",
+      "digest": "20f35d706566e57a9ee6526ea07da5fe49b504789cea0bef0d9503cfcca2d10e"
+    }
+  ],
+  "release": {
+    "channel": "features",
+    "fixes": []
+  },
+  "images": [],
+  "vulnerabilityWaivers": [],
+  "supportedPlatforms": [
+    "server",
+    "web"
+  ],
+  "licence": "Apache-2.0",
+  "licenceFile": "LICENCE",
+  "noticeFile": "NOTICE",
+  "platforms": [
+    "server",
+    "web"
+  ]
+}

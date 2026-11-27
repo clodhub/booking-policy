@@ -1,0 +1,18 @@
+{
+  "format": 1,
+  "jobs": [
+    "booking-policy"
+  ],
+  "profiles": [
+    {
+      "id": "any",
+      "load": {},
+      "cost": "none",
+      "regions": [
+        "any"
+      ],
+      "compliance": []
+    }
+  ],
+  "notes": "Pure functions. The checkout expiry limits (30 minutes to 24 hours) are Stripe's, from https://docs.stripe.com/api/checkout/sessions/create (expires_at)."
+}
